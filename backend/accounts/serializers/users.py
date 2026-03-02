@@ -5,6 +5,20 @@ from accounts.models import User, Invite
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """
+    Read only serializer for displaying user details.
+
+    Used for listing and retrieving user information within a business.
+    Email and id are always read only regardless of context.
+
+    Args:
+        instance (User): The User instance to serialize.
+
+    Returns:
+        dict: Serialized user data including id, email, full_name,
+              role, is_active, and timestamps.
+    """
+
     class Meta:
         model = User
         fields = [
@@ -24,8 +38,26 @@ class UserSerializer(serializers.ModelSerializer):
         ]
 
 
-# enforce owner role can never be assigned or changed by anyone, admins cannot change roles of other admins, admin cap is respected when promoting someone to admin
 class UpdateUserRoleSerializer(serializers.ModelSerializer):
+    """
+    Handles updating a user's role within a business.
+
+    Enforces role change restrictions — the owner role cannot be
+    assigned or changed, admins cannot change other admins' roles,
+    and the admin cap is respected when promoting a user to admin.
+
+    Args:
+        role (str): The new role to assign. Choices are admin or author.
+
+    Raises:
+        serializers.ValidationError: If attempting to change or assign the owner role.
+        serializers.ValidationError: If the business has reached its admin cap.
+        serializers.ValidationError: If an admin attempts to change another admin's role.
+
+    Returns:
+        User: The updated User instance.
+    """
+
     class Meta:
         model = User
         fields = ['role']
@@ -57,8 +89,27 @@ class UpdateUserRoleSerializer(serializers.ModelSerializer):
         return value
 
 
-# prevent self-deactivation, protect owner account, stops admins from deactivating each other
 class DeactivateUserSerializer(serializers.Serializer):
+    """
+    Handles user deactivation within a business.
+
+    Enforces deactivation restrictions — users cannot deactivate
+    themselves, the owner cannot be deactivated, and admins cannot
+    deactivate other admins.
+
+    Args:
+        confirm (bool): Must be True to proceed. Prevents accidental deactivation.
+
+    Raises:
+        serializers.ValidationError: If confirm is False or not provided.
+        serializers.ValidationError: If the user is attempting to deactivate themselves.
+        serializers.ValidationError: If attempting to deactivate the owner.
+        serializers.ValidationError: If an admin attempts to deactivate another admin.
+
+    Returns:
+        None
+    """
+
     confirm = serializers.BooleanField()
 
     def validate_confirm(self, value):
@@ -84,6 +135,19 @@ class DeactivateUserSerializer(serializers.Serializer):
 
 
 class InviteSerializer(serializers.ModelSerializer):
+    """
+    Read only serializer for displaying invite details.
+
+    Used for listing and retrieving existing invites within a business.
+
+    Args:
+        instance (Invite): The Invite instance to serialize.
+
+    Returns:
+        dict: Serialized invite data including id, email, role,
+              accepted status, expiry, and created timestamp.
+    """
+
     class Meta:
         model = Invite
         fields = [
@@ -102,8 +166,31 @@ class InviteSerializer(serializers.ModelSerializer):
         ]
 
 
-# check user and admin caps before creating invite, prevent duplicate invite to same email, stops admins from inviting other admins, owner invites admins
+
 class CreateInviteSerializer(serializers.ModelSerializer):
+    """
+    Handles creating a new user invite for a business.
+
+    Validates that the business has capacity for a new user, that no
+    active invite already exists for the email, and that role assignment
+    rules are respected. Sets the invite expiry to 7 days from creation.
+
+    Args:
+        email (str): The email address to send the invite to.
+        role (str): The role to assign the invited user. Choices are admin or author.
+
+    Raises:
+        serializers.ValidationError: If the email already belongs to a user in the business.
+        serializers.ValidationError: If an active invite for the email already exists.
+        serializers.ValidationError: If the business has reached its maximum user count.
+        serializers.ValidationError: If the business has reached its maximum admin count.
+        serializers.ValidationError: If an admin attempts to invite another admin.
+        serializers.ValidationError: If the owner role is specified.
+
+    Returns:
+        Invite: The newly created Invite instance.
+    """
+    
     class Meta:
         model = Invite
         fields = ['email', 'role']

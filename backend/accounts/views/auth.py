@@ -7,7 +7,27 @@ from accounts.serializers import (BusinessRegistrationSerializer, LoginSerialize
 
 
 class RegisterView(APIView):
-    # using AllowAny here, login, and invite since endpoints need to be accessible before a user is authenticated
+    """
+    Handles business and owner registration.
+
+    Creates a new Business and owner User account in a single request.
+    Returns user details, business details, and JWT tokens on success
+    so the frontend can initialize the session immediately.
+
+    Args:
+        business_name (str): The name of the business.
+        full_name (str): The full name of the owner.
+        email (str): The owner's email address.
+        password (str): The owner's password.
+        confirm_password (str): Must match password.
+
+    Raises:
+        serializers.ValidationError: If any required fields are missing or invalid.
+
+    Returns:
+        dict: User details, business details, and JWT access and refresh tokens.
+    """
+
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -38,6 +58,23 @@ class RegisterView(APIView):
 
 
 class LoginView(APIView):
+    """
+    Handles user authentication.
+
+    Validates user credentials and returns JWT tokens on success
+    along with user and business details for session initialization.
+
+    Args:
+        email (str): The user's email address.
+        password (str): The user's password.
+
+    Raises:
+        serializers.ValidationError: If credentials are invalid or account is inactive.
+
+    Returns:
+        dict: User details, business details, and JWT access and refresh tokens.
+    """
+
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -68,6 +105,22 @@ class LoginView(APIView):
     
 
 class LogoutView(APIView):
+    """
+    Handles user logout by blacklisting the refresh token.
+
+    Requires the refresh token in the request body. Once blacklisted
+    the token cannot be used to generate new access tokens.
+
+    Args:
+        refresh (str): The JWT refresh token to blacklist.
+
+    Raises:
+        serializers.ValidationError: If the refresh token is missing, invalid, or expired.
+
+    Returns:
+        dict: A success message confirming the logout.
+    """
+
     permission_classes = [IsAuthenticated]
 
     # blacklisting refresh token here so it can't be used to generate a new access token after logout
@@ -88,6 +141,27 @@ class LogoutView(APIView):
         
 
 class InviteAcceptView(APIView):
+    """
+    Handles invite acceptance and new user account creation.
+
+    Validates the invite token, creates the user account, marks the
+    invite as accepted, and returns JWT tokens so the new user is
+    logged in immediately after accepting their invite.
+
+    Args:
+        token (UUID): The unique invite token from the invite link.
+        full_name (str): The full name of the invited user.
+        password (str): The new user's password.
+        confirm_password (str): Must match password.
+
+    Raises:
+        serializers.ValidationError: If the token is invalid, expired, or already accepted.
+        serializers.ValidationError: If password and confirm_password do not match.
+
+    Returns:
+        dict: User details, business details, and JWT access and refresh tokens.
+    """
+    
     permission_classes = [AllowAny]
 
     def post(self, request):
