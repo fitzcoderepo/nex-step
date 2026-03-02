@@ -7,7 +7,11 @@ import secrets
 class Business(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
+
     api_key = models.CharField(max_length=64, unique=True, editable=False)
+    old_api_key = models.CharField(max_length=64, null=True, blank=True, editable=False)
+    old_api_key_expires_at = models.DateTimeField(null=True, blank=True)
+    
     max_users = models.PositiveIntegerField(default=10)
     max_admins = models.PositiveIntegerField(default=2)
     created_at = models.DateTimeField(auto_now_add=True)
