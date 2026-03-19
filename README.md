@@ -2,6 +2,11 @@
 
 NexStep is a configurable workflow platform designed to model and execute decision-tree based processes across multiple organizations.
 
+## Problem
+
+Many workflow systems require hardcoded logic or lack flexibility for dynamic decision-making. NexStep addresses this by allowing workflows to be defined and modified entirely through data models.
+
+
 ## Overview
 
 The platform allows users to define structured workflows with dynamic branching logic, enabling use cases such as troubleshooting guides, manufacturing processes, and operational task flows.
